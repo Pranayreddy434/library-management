@@ -1,0 +1,56 @@
+package com.library.admin;
+
+import com.library.book.*;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.Instant;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/admin/books")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+public class AdminBookController {
+
+    private final BookService bookService;
+    private final OpenLibraryService openLibraryService;
+
+    @GetMapping("/search-external")
+    @PreAuthorize("hasRole('ADMIN')")
+    public OpenLibraryService.OpenLibrarySearchResponse searchExternal(
+            @RequestParam String query) {
+        return openLibraryService.search(query);
+    }
+
+    @PostMapping("/import")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Book importBook(@RequestBody ImportBookRequest request) {
+        return bookService.create(
+                Book.builder()
+                    .title(request.getTitle())
+                    .author(request.getAuthor())
+                    .isbn(request.getIsbn())
+                    .category(request.getCategory())
+                    .totalCopies(request.getTotalCopies())
+                    .availableCopies(request.getTotalCopies())
+                    .coverImageUrl(request.getCoverImageUrl())
+                    .description(request.getDescription())
+                    .createdAt(Instant.now())
+                    .build()
+        );
+    }
+
+    @Data
+    public static class ImportBookRequest {
+        private String title;
+        private String author;
+        private String isbn;
+        private String category;
+        private Integer totalCopies;
+        private String coverImageUrl;
+        private String description;
+    }
+}

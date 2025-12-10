@@ -1,0 +1,25 @@
+
+package com.library.auth;
+
+import lombok.Data;
+
+@Data
+public class RegisterRequest {
+    private String name;
+    private String email;
+    private String password;
+}
+
+@Data
+class LoginRequest {
+    private String email;
+    private String password;
+}
+
+@Data
+class AuthResponse {
+    private String token;
+    private String role;
+    private String email;
+    private String name;
+}

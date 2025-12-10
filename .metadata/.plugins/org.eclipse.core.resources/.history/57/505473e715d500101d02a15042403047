@@ -1,0 +1,39 @@
+package com.library.book;
+
+import java.util.List;
+
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class BookService {
+
+    private final BookRepository repo;
+
+    //
+    public Page<Book> list(String title, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("title"));
+      
+        return repo.findAll(pageable);
+    }
+
+    public Book get(Long id) {
+        return repo.findById(id).orElseThrow();
+    }
+
+    
+    public Book create(Book book) {
+        return repo.save(book);
+    }
+
+    public List<Book> listAll() {
+        return repo.findAll();
+    }
+
+    public Book save(Book book) {
+        return repo.save(book);
+    }
+}

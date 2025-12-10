@@ -1,0 +1,34 @@
+package com.library.notification;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.Instant;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Notification {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(optional = false)
+    private com.library.user.User user;
+
+    private String title;
+
+    @Column(length = 1000)
+    private String message;
+
+    private String type;
+
+    @Column(name = "is_read")   // ✅ avoid reserved word
+    private boolean read;
+
+    private Instant createdAt;
+}

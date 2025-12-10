@@ -1,0 +1,69 @@
+package com.library.admin;
+
+import com.library.book.Book;
+import com.library.book.BookService;
+import com.library.book.OpenLibraryService;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.Instant;
+
+@RestController
+@RequestMapping("/api/admin/books")
+@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
+public class AdminBookController {
+
+    private final BookService bookService;
+    private final OpenLibraryService openLibraryService;
+
+    @GetMapping
+    public java.util.List<Book> all() {
+        return bookService.listAll(); // implement listAll() in BookService if not present
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public Book create(@RequestBody Book b) {
+        return bookService.save(b);
+    }
+
+    @GetMapping("/search-external")
+    @PreAuthorize("hasRole('ADMIN')")
+    public OpenLibraryService.OpenLibrarySearchResponse searchExternal(
+            @RequestParam String query) {
+        return openLibraryService.search(query);
+    }
+
+    // 🔴 This is what your frontend is calling
+    @PostMapping("/import")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Book importBook(@RequestBody ImportBookRequest request) {
+        Book book = Book.builder()
+                .title(request.getTitle())
+                .author(request.getAuthor())
+                .isbn(request.getIsbn())
+                .category(request.getCategory())
+                .totalCopies(request.getTotalCopies())
+                .availableCopies(request.getTotalCopies())
+                .coverImageUrl(request.getCoverImageUrl())
+                .description(request.getDescription())
+                .createdAt(Instant.now())
+                .build();
+
+        return bookService.save(book);
+    }
+
+    @Data
+    public static class ImportBookRequest {
+        private String title;
+        private String author;
+        private String isbn;
+        private String category;
+        private Integer totalCopies;
+        private String coverImageUrl;
+        private String description;
+    }
+}

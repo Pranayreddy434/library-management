@@ -1,0 +1,80 @@
+package com.library.book;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.*;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Instant;
+import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(BookController.class)
+class BookControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private BookService bookService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    void list_ShouldReturnPagedBooks() throws Exception {
+        Book b1 = Book.builder()
+                .id(1L)
+                .title("Clean Code")
+                .author("Robert C. Martin")
+                .isbn("9780132350884")
+                .category("Software")
+                .totalCopies(4)
+                .availableCopies(4)
+                .createdAt(Instant.now())
+                .build();
+
+        Page<Book> page = new PageImpl<>(List.of(b1));
+
+        Mockito.when(bookService.list(null, 0, 20)).thenReturn(page);
+
+        mockMvc.perform(get("/api/books")
+                        .param("page", "0")
+                        .param("size", "20")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].title", is("Clean Code")))
+                .andExpect(jsonPath("$.content[0].author", is("Robert C. Martin")));
+    }
+
+    @Test
+    void get_ShouldReturnSingleBook() throws Exception {
+        Book b1 = Book.builder()
+                .id(1L)
+                .title("Clean Code")
+                .author("Robert C. Martin")
+                .isbn("9780132350884")
+                .category("Software")
+                .totalCopies(4)
+                .availableCopies(4)
+                .createdAt(Instant.now())
+                .build();
+
+        Mockito.when(bookService.get(1L)).thenReturn(b1);
+
+        mockMvc.perform(get("/api/books/1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title", is("Clean Code")))
+                .andExpect(jsonPath("$.isbn", is("9780132350884")));
+    }
+}

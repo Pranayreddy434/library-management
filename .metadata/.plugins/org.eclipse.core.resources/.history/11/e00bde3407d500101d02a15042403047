@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/library_db?createDatabaseIfNotExist=true
+    username: root
+    password: 20g21a043_P
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  # 👉 MUST be at least 32 chars (256 bits) for HS256
+  secret: "this-is-a-very-long-secret-key-1234567890!!"
+  expiration-ms: 86400000
+
+openlibrary:
+  base-url: "https://openlibrary.org"
+
+server:
+  port: 8080

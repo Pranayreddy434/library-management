@@ -1,0 +1,40 @@
+// book/OpenLibraryService.java
+package com.library.book;
+
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class OpenLibraryService {
+
+    private final RestTemplate restTemplate;
+
+    @Value("${openlibrary.base-url}")
+    private String baseUrl;
+
+    public OpenLibrarySearchResponse search(String query) {
+        String url = baseUrl + "/search.json?q=" + query.replace(" ", "+");
+        return restTemplate.getForObject(url, OpenLibrarySearchResponse.class);
+    }
+
+    @Data
+    public static class OpenLibrarySearchResponse {
+        private List<Doc> docs;
+
+        @Data
+        public static class Doc {
+            private String title;
+            private List<String> author_name;
+            private List<String> isbn;
+            private List<String> subject;
+            private Integer first_publish_year;
+            private String key;
+        }
+    }
+}

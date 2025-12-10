@@ -1,0 +1,36 @@
+package com.library.book;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class BookService {
+
+    private final BookRepository repo;
+
+    // paged list for /api/books
+    public Page<Book> list(String title, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("title").ascending());
+
+        // simple: ignore title for now
+        return repo.findAll(pageable);
+    }
+
+    // used by AdminBookController GET /api/admin/books
+    public List<Book> listAll() {
+        return repo.findAll(Sort.by("title").ascending());
+    }
+
+    public Book get(Long id) {
+        return repo.findById(id).orElseThrow();
+    }
+
+    // used for both normal create and import
+    public Book save(Book book) {
+        return repo.save(book);
+    }
+}

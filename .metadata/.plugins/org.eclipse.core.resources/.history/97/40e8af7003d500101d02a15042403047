@@ -1,0 +1,148 @@
+package com.library.reservation;
+
+import com.library.book.*;
+import com.library.notification.*;
+import com.library.settings.LibrarySettingsService;
+import com.library.user.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.*;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class ReservationService {
+
+    private final ReservationRepository reservationRepo;
+    private final BookRepository bookRepo;
+    private final UserRepository userRepo;
+    private final LibrarySettingsService settingsService;
+    private final NotificationService notificationService;
+
+    private User getCurrentUser() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        return userRepo.findByEmail(email).orElseThrow();
+    }
+
+    public Reservation createReservation(Long bookId) {
+        User user = getCurrentUser();
+        Book book = bookRepo.findById(bookId).orElseThrow();
+
+        var settings = settingsService.getSettings();
+
+        long activeCount = reservationRepo.countByUserAndStatusIn(
+                user,
+                List.of(ReservationStatus.REQUESTED,
+                        ReservationStatus.APPROVED,
+                        ReservationStatus.BORROWED,
+                        ReservationStatus.WAITING)
+        );
+        if (activeCount >= settings.getReservationLimitPerUser()) {
+            throw new RuntimeException("Reservation limit reached");
+        }
+
+        Reservation.ReservationBuilder builder = Reservation.builder()
+                .user(user)
+                .book(book)
+                .createdAt(LocalDateTime.now())
+                .fineAmount(BigDecimal.ZERO);
+
+        if (book.getAvailableCopies() > 0) {
+            // Immediately APPROVED & BORROWED
+            book.setAvailableCopies(book.getAvailableCopies() - 1);
+            bookRepo.save(book);
+
+            LocalDate issueDate = LocalDate.now();
+            LocalDate dueDate = issueDate.plusDays(settings.getMaxBorrowDays());
+
+            var res = builder
+                    .status(ReservationStatus.BORROWED)
+                    .issueDate(issueDate)
+                    .dueDate(dueDate)
+                    .build();
+            reservationRepo.save(res);
+
+            notificationService.notify(user,
+                    "Book borrowed: " + book.getTitle(),
+                    "Due date: " + dueDate,
+                    "BORROWED");
+            return res;
+        } else {
+            // Waiting list
+            var res = builder
+                    .status(ReservationStatus.WAITING)
+                    .build();
+            reservationRepo.save(res);
+
+            notificationService.notify(user,
+                    "Added to waiting list: " + book.getTitle(),
+                    "You will be notified when available.",
+                    "WAITING");
+            return res;
+        }
+    }
+
+    public Reservation returnBook(Long reservationId) {
+        Reservation r = reservationRepo.findById(reservationId).orElseThrow();
+        if (r.getStatus() != ReservationStatus.BORROWED) {
+            throw new RuntimeException("Not a borrowed reservation");
+        }
+
+        r.setReturnDate(LocalDate.now());
+        var settings = settingsService.getSettings();
+
+        long daysLate = 0;
+        if (r.getDueDate() != null && r.getReturnDate().isAfter(r.getDueDate())) {
+            daysLate = Duration.between(
+                    r.getDueDate().atStartOfDay(),
+                    r.getReturnDate().atStartOfDay()
+            ).toDays();
+        }
+
+        BigDecimal fine = daysLate > 0
+                ? settings.getFinePerDay().multiply(BigDecimal.valueOf(daysLate))
+                : BigDecimal.ZERO;
+
+        r.setFineAmount(fine);
+        r.setStatus(ReservationStatus.RETURNED);
+        reservationRepo.save(r);
+
+        // free a copy
+        Book book = r.getBook();
+        book.setAvailableCopies(book.getAvailableCopies() + 1);
+        bookRepo.save(book);
+
+        // assign to next waiting reservation if exists
+        var waitingList = reservationRepo.findByBookAndStatusInOrderByCreatedAtAsc(
+                book, List.of(ReservationStatus.WAITING)
+        );
+        if (!waitingList.isEmpty()) {
+            Reservation next = waitingList.get(0);
+            LocalDate issue = LocalDate.now();
+            LocalDate due = issue.plusDays(settings.getMaxBorrowDays());
+            next.setStatus(ReservationStatus.BORROWED);
+            next.setIssueDate(issue);
+            next.setDueDate(due);
+            reservationRepo.save(next);
+
+            book.setAvailableCopies(book.getAvailableCopies() - 1);
+            bookRepo.save(book);
+
+            notificationService.notify(next.getUser(),
+                    "Book now available: " + book.getTitle(),
+                    "Due date: " + due,
+                    "BORROWED");
+        }
+        public List<Reservation> myReservations() {
+            User user = getCurrentUser();
+            return reservationRepo.findByUserOrderByCreatedAtDesc(user);
+        }
+
+
+        return r;
+    }
+}

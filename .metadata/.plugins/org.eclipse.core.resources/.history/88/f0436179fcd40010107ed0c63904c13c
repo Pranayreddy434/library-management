@@ -1,0 +1,23 @@
+package com.library.reservation;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/reservations")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+public class ReservationController {
+
+    private final ReservationService reservationService;
+
+    @PostMapping
+    public Reservation create(@RequestParam Long bookId) {
+        return reservationService.createReservation(bookId);
+    }
+
+    @PutMapping("/{id}/return")
+    public Reservation returnBook(@PathVariable Long id) {
+        return reservationService.returnBook(id);
+    }
+}

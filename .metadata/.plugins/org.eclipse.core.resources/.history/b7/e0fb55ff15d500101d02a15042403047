@@ -1,0 +1,43 @@
+package com.library.admin;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import com.library.book.Book;
+import com.library.book.BookService;
+import com.library.book.OpenLibraryService;
+
+@RestController
+@RequestMapping("/api/admin/books")
+@CrossOrigin(origins = "*")
+public class AdminBookController {
+
+    private final BookService bookService;
+    private final OpenLibraryService openLibraryService;
+
+    public AdminBookController(BookService bookService,
+                               OpenLibraryService openLibraryService) {
+        this.bookService = bookService;
+        this.openLibraryService = openLibraryService;
+    }
+
+    @GetMapping
+    public List<Book> all() {
+        return bookService.listAll(); // make sure BookService has this method
+    }
+
+    @PostMapping
+    public ResponseEntity<Book> create(@RequestBody Book b) {
+        return ResponseEntity.ok(bookService.save(b)); // make sure BookService has save()
+    }
+
+    @GetMapping("/search-external")
+    @PreAuthorize("hasRole('ADMIN')")
+    public OpenLibraryService.OpenLibrarySearchResponse searchExternal(
+            @RequestParam String query) {
+        return openLibraryService.search(query);
+    }
+}

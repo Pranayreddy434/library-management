@@ -1,0 +1,113 @@
+package com.library.admin;
+
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.Instant;
+import java.util.List;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.library.book.Book;
+import com.library.book.BookService;
+import com.library.book.OpenLibraryService;
+import com.library.book.OpenLibraryService.OpenLibrarySearchResponse;
+import com.library.book.OpenLibraryService.OpenLibrarySearchResponse.Doc;
+import com.library.config.JwtAuthFilter;
+import com.library.user.CustomUserDetailsService;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+@WebMvcTest(AdminBookController.class)
+class AdminBookControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    // business mocks
+    @MockBean
+    private BookService bookService;
+
+    @MockBean
+    private OpenLibraryService openLibraryService;
+
+    // 🔐 security mocks – required so SecurityConfig can start
+    @MockBean
+    private JwtAuthFilter jwtAuthFilter;
+
+    @MockBean
+    private CustomUserDetailsService customUserDetailsService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void searchExternal_ShouldReturnDocsFromOpenLibrary() throws Exception {
+        Doc doc = new Doc();
+        doc.setTitle("Clean Code");
+        doc.setAuthor_name(List.of("Robert C. Martin"));
+        doc.setIsbn(List.of("9780132350884"));
+        doc.setSubject(List.of("Software"));
+        doc.setFirst_publish_year(2008);
+        doc.setKey("/works/OL12345W");
+
+        OpenLibrarySearchResponse resp = new OpenLibrarySearchResponse();
+        resp.setDocs(List.of(doc));
+
+        Mockito.when(openLibraryService.search("java"))
+                .thenReturn(resp);
+
+        mockMvc.perform(get("/api/admin/books/search-external")
+                        .param("query", "java")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.docs", hasSize(1)))
+                .andExpect(jsonPath("$.docs[0].title", is("Clean Code")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void importBook_ShouldCreateBookUsingService() throws Exception {
+        AdminBookController.ImportBookRequest req = new AdminBookController.ImportBookRequest();
+        req.setTitle("Clean Code");
+        req.setAuthor("Robert C. Martin");
+        req.setIsbn("9780132350884");
+        req.setCategory("Software");
+        req.setTotalCopies(3);
+        req.setCoverImageUrl("https://covers.openlibrary.org/b/isbn/9780132350884-M.jpg");
+        req.setDescription("A book about clean code.");
+
+        Book saved = Book.builder()
+                .id(10L)
+                .title(req.getTitle())
+                .author(req.getAuthor())
+                .isbn(req.getIsbn())
+                .category(req.getCategory())
+                .totalCopies(req.getTotalCopies())
+                .availableCopies(req.getTotalCopies())
+                .coverImageUrl(req.getCoverImageUrl())
+                .description(req.getDescription())
+                .createdAt(Instant.now())
+                .build();
+
+        Mockito.when(bookService.save(Mockito.any(Book.class))).thenReturn(saved);
+
+        mockMvc.perform(post("/api/admin/books/import")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(10)))
+                .andExpect(jsonPath("$.title", is("Clean Code")))
+                .andExpect(jsonPath("$.isbn", is("9780132350884")));
+    }
+}

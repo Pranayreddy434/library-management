@@ -1,0 +1,61 @@
+// auth/AuthService.java
+package com.library.auth;
+
+import com.library.config.JwtService;
+import com.library.user.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final AuthenticationManager authManager;
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthResponse register(RegisterRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already in use");
+        }
+
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.USER)
+                .build();
+        userRepository.save(user);
+
+        String token = jwtService.generateToken(user.getEmail());
+
+        AuthResponse res = new AuthResponse();
+        res.setToken(token);
+        res.setEmail(user.getEmail());
+        res.setRole(user.getRole().name());
+        res.setName(user.getName());
+        return res;
+    }
+
+    public AuthResponse login(LoginRequest request) {
+        authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(), request.getPassword()
+                )
+        );
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String token = jwtService.generateToken(user.getEmail());
+
+        AuthResponse res = new AuthResponse();
+        res.setToken(token);
+        res.setEmail(user.getEmail());
+        res.setRole(user.getRole().name());
+        res.setName(user.getName());
+        return res;
+    }
+}

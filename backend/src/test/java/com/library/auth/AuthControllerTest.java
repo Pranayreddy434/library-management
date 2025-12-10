@@ -1,0 +1,92 @@
+package com.library.auth;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.library.config.JwtAuthFilter;
+import com.library.config.JwtService;
+import com.library.user.CustomUserDetailsService;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
+class AuthControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    // business service
+    @MockBean
+    private AuthService authService;
+
+    // 🔐 security mocks (so context starts)
+    @MockBean
+    private JwtAuthFilter jwtAuthFilter;
+
+    @MockBean
+    private JwtService jwtService;
+
+    @MockBean
+    private CustomUserDetailsService customUserDetailsService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    void register_ShouldReturnTokenAndUserInfo() throws Exception {
+        RegisterRequest req = new RegisterRequest();
+        req.setName("Test User");
+        req.setEmail("test@example.com");
+        req.setPassword("password");
+
+        AuthResponse mockResponse = new AuthResponse();
+        mockResponse.setToken("mock-jwt-token");
+        mockResponse.setEmail("test@example.com");
+        mockResponse.setRole("USER");
+        mockResponse.setName("Test User");
+
+        Mockito.when(authService.register(Mockito.any(RegisterRequest.class)))
+                .thenReturn(mockResponse);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token", is("mock-jwt-token")))
+                .andExpect(jsonPath("$.email", is("test@example.com")))
+                .andExpect(jsonPath("$.role", is("USER")));
+    }
+
+    @Test
+    void login_ShouldReturnTokenAndUserInfo() throws Exception {
+        LoginRequest req = new LoginRequest();
+        req.setEmail("test@example.com");
+        req.setPassword("password");
+
+        AuthResponse mockResponse = new AuthResponse();
+        mockResponse.setToken("mock-jwt-token");
+        mockResponse.setEmail("test@example.com");
+        mockResponse.setRole("USER");
+        mockResponse.setName("Test User");
+
+        Mockito.when(authService.login(Mockito.any(LoginRequest.class)))
+                .thenReturn(mockResponse);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token", is("mock-jwt-token")))
+                .andExpect(jsonPath("$.email", is("test@example.com")))
+                .andExpect(jsonPath("$.role", is("USER")));
+    }
+}

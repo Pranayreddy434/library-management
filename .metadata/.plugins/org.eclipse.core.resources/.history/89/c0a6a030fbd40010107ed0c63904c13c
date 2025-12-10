@@ -1,0 +1,18 @@
+package com.library.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@ConfigurationProperties(prefix = "openlibrary")
+public class OpenLibraryConfig {
+    private String apiUrl = "https://openlibrary.org";
+
+    public String getApiUrl() {
+        return apiUrl;
+    }
+
+    public void setApiUrl(String apiUrl) {
+        this.apiUrl = apiUrl;
+    }
+}

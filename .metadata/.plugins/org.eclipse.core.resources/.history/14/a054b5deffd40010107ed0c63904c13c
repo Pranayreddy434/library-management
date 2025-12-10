@@ -1,0 +1,39 @@
+
+package com.library.reservation;
+
+import com.library.book.Book;
+import com.library.user.User;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.*;
+
+@Entity
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor @Builder
+public class Reservation {
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(optional = false)
+    private User user;
+
+    @ManyToOne(optional = false)
+    private Book book;
+
+    private LocalDateTime createdAt;
+
+    private LocalDate issueDate;
+    private LocalDate dueDate;
+    private LocalDate returnDate;
+
+    private BigDecimal fineAmount;
+
+    @Enumerated(EnumType.STRING)
+    private ReservationStatus status;
+
+    private Instant expiresAt;
+    private Instant cancelledAt;
+}

@@ -1,0 +1,27 @@
+package com.library.admin;
+
+import com.library.reservation.Reservation;
+import com.library.reservation.ReservationService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/admin/reservations")
+public class AdminReservationController {
+    private final ReservationService reservationService;
+
+    public AdminReservationController(ReservationService reservationService) { this.reservationService = reservationService; }
+
+    @GetMapping
+    public List<Reservation> all() { return reservationService.listAll(); }
+
+    @PostMapping("/cancel/{id}")
+    public ResponseEntity<?> cancel(@PathVariable Long id) {
+        Reservation r = reservationService.get(id);
+        r.setStatus(com.library.reservation.ReservationStatus.CANCELLED);
+        reservationService.create(r);
+        return ResponseEntity.ok().build();
+    }
+}

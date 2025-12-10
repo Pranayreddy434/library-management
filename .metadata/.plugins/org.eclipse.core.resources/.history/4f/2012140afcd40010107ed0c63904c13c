@@ -1,0 +1,8 @@
+package com.library.admin;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class AdminService {
+    // placeholder for admin-related operations
+}

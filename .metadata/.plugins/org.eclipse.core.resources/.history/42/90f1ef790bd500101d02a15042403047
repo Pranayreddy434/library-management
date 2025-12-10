@@ -1,0 +1,54 @@
+-- ==========================================================
+-- LIBRARY SETTINGS
+-- ==========================================================
+INSERT INTO library_settings (id, max_borrow_days, reservation_limit_per_user, fine_per_day)
+VALUES (1, 14, 5, 2.00)
+ON DUPLICATE KEY UPDATE max_borrow_days = 14;
+
+
+-- ==========================================================
+-- USERS (Admin + sample user)
+-- Passwords: admin123 / user123 (BCrypt hashes)
+-- ==========================================================
+INSERT INTO users (id, name, email, password, role)
+VALUES 
+  (1, 'Admin', 'admin@library.com', 
+   '$2a$10$fJVYtz8HzX3z9bYQ6zR0ROoF9uXpzqkJ6Z3b49y3PhxfHS5YUOFWy', 'ADMIN'),
+  (2, 'John Doe', 'john@example.com', 
+   '$2a$10$RaC21KI6yCv6lb6qTntpfeESB.68lRoqA8g.QnDlqLkQ/eBFm2I2S', 'USER')
+ON DUPLICATE KEY UPDATE name = VALUES(name);
+
+
+-- Password Notes:
+-- admin123 = $2a$10$fJVYtz8HzX3z9bYQ6zR0ROoF9uXpzqkJ6Z3b49y3PhxfHS5YUOFWy
+-- user123  = $2a$10$RaC21KI6yCv6lb6qTntpfeESB.68lRoqA8g.QnDlqLkQ/eBFm2I2S
+
+
+-- ==========================================================
+-- BOOKS — seeded with covers from OpenLibrary
+-- ==========================================================
+INSERT INTO book (id, title, author, isbn, category, total_copies, available_copies, cover_image_url, description, created_at)
+VALUES
+  (1, 'Clean Code', 'Robert C. Martin', '9780132350884', 'Software', 4, 4,
+   'https://covers.openlibrary.org/b/isbn/9780132350884-M.jpg',
+   'A Handbook of Agile Software Craftsmanship.', CURRENT_TIMESTAMP),
+  (2, 'The Pragmatic Programmer', 'Andrew Hunt; David Thomas', '9780201616224', 'Software', 3, 3,
+   'https://covers.openlibrary.org/b/isbn/9780201616224-M.jpg',
+   'Journey to Mastery for Developers.', CURRENT_TIMESTAMP),
+  (3, 'Design Patterns', 'Erich Gamma et al.', '9780201633610', 'Software', 2, 2,
+   'https://covers.openlibrary.org/b/isbn/9780201633610-M.jpg',
+   'Elements of Reusable Object-Oriented Software.', CURRENT_TIMESTAMP),
+  (4, 'Zero to One', 'Peter Thiel', '9780804139298', 'Business', 5, 5,
+   'https://covers.openlibrary.org/b/isbn/9780804139298-M.jpg',
+   'Notes on Startups or How to Build the Future.', CURRENT_TIMESTAMP)
+ON DUPLICATE KEY UPDATE title = VALUES(title);
+
+
+-- ==========================================================
+-- SAMPLE RESERVATIONS (Optional)
+-- Uncomment if needed for admin dashboard testing
+-- ==========================================================
+-- INSERT INTO reservation (id, user_id, book_id, created_at, issue_date, due_date, status, fine_amount)
+-- VALUES
+--   (1, 2, 1, NOW(), CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 'BORROWED', 0.00)
+-- ON DUPLICATE KEY UPDATE status = 'BORROWED';

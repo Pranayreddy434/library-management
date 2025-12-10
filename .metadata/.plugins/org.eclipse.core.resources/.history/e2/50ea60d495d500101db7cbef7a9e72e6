@@ -1,0 +1,28 @@
+package com.library.book;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/books")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+public class BookController {
+
+    private final BookService bookService;
+
+    @GetMapping
+    public Page<Book> list(
+            @RequestParam(required = false) String title,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return bookService.list(title, page, size);
+    }
+
+    @GetMapping("/{id}")
+    public Book get(@PathVariable Long id) {
+        return bookService.get(id);
+    }
+}

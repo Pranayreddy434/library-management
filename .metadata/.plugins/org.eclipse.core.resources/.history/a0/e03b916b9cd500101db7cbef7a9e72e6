@@ -1,0 +1,152 @@
+package com.library.reservation;
+
+import com.library.book.Book;
+import com.library.book.BookRepository;
+import com.library.notification.NotificationService;
+import com.library.settings.LibrarySettings;
+import com.library.settings.LibrarySettingsService;
+import com.library.user.Role;
+import com.library.user.User;
+import com.library.user.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class ReservationServiceTest {
+
+    @Mock
+    private ReservationRepository reservationRepository;
+
+    @Mock
+    private BookRepository bookRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private LibrarySettingsService settingsService;
+
+    @Mock
+    private NotificationService notificationService;
+
+    @InjectMocks
+    private ReservationService reservationService;
+
+    private User currentUser;
+    private Book book;
+    private LibrarySettings settings;
+
+    @BeforeEach
+    void setUp() {
+        // Simulate logged-in user via SecurityContext
+        Authentication auth = mock(Authentication.class);
+        when(auth.getName()).thenReturn("user@example.com");
+        SecurityContext ctx = mock(SecurityContext.class);
+        when(ctx.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(ctx);
+
+        currentUser = User.builder()
+                .id(1L)
+                .name("Test User")
+                .email("user@example.com")
+                .password("pw")
+                .role(Role.USER)
+                .build();
+
+        book = Book.builder()
+                .id(1L)
+                .title("Clean Code")
+                .author("Robert C. Martin")
+                .isbn("9780132350884")
+                .totalCopies(2)
+                .availableCopies(2)
+                .build();
+
+        settings = LibrarySettings.builder()
+                .maxBorrowDays(14)
+                .reservationLimitPerUser(5)
+                .finePerDay(new BigDecimal("2.00"))
+                .build();
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(currentUser));
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+        when(settingsService.getSettings()).thenReturn(settings);
+    }
+
+    @Test
+    void createReservation_WhenCopiesAvailable_ShouldBorrowImmediately() {
+        when(reservationRepository.countByUserAndStatusIn(
+                eq(currentUser),
+                anyList())
+        ).thenReturn(0L);
+
+        Reservation saved = Reservation.builder()
+                .id(100L)
+                .user(currentUser)
+                .book(book)
+                .createdAt(LocalDateTime.now())
+                .status(ReservationStatus.BORROWED)
+                .issueDate(LocalDate.now())
+                .dueDate(LocalDate.now().plusDays(14))
+                .fineAmount(BigDecimal.ZERO)
+                .build();
+
+        when(reservationRepository.save(any(Reservation.class))).thenReturn(saved);
+
+        Reservation result = reservationService.createReservation(1L);
+
+        assertThat(result.getStatus()).isEqualTo(ReservationStatus.BORROWED);
+        assertThat(result.getBook().getId()).isEqualTo(1L);
+        verify(bookRepository).save(any(Book.class));
+        verify(notificationService).notify(
+                eq(currentUser),
+                contains("Book borrowed"),
+                anyString(),
+                eq("BORROWED")
+        );
+    }
+
+    @Test
+    void createReservation_WhenNoCopiesAvailable_ShouldAddToWaitingList() {
+        book.setAvailableCopies(0);
+
+        when(reservationRepository.countByUserAndStatusIn(
+                eq(currentUser),
+                anyList())
+        ).thenReturn(0L);
+
+        Reservation waiting = Reservation.builder()
+                .id(101L)
+                .user(currentUser)
+                .book(book)
+                .status(ReservationStatus.WAITING)
+                .build();
+
+        when(reservationRepository.save(any(Reservation.class))).thenReturn(waiting);
+
+        Reservation result = reservationService.createReservation(1L);
+
+        assertThat(result.getStatus()).isEqualTo(ReservationStatus.WAITING);
+        verify(notificationService).notify(
+                eq(currentUser),
+                contains("waiting list"),
+                anyString(),
+                eq("WAITING")
+        );
+    }
+}

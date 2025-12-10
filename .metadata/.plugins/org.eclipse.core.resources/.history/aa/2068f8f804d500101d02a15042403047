@@ -1,0 +1,22 @@
+package com.library.admin;
+
+import com.library.book.Book;
+import com.library.book.BookService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/admin/books")
+public class AdminBookController {
+    private final BookService bookService;
+
+    public AdminBookController(BookService bookService) { this.bookService = bookService; }
+
+    @GetMapping
+    public List<Book> all() { return bookService.listAll(); }
+
+    @PostMapping
+    public ResponseEntity<Book> create(@RequestBody Book b) { return ResponseEntity.ok(bookService.save(b)); }
+}

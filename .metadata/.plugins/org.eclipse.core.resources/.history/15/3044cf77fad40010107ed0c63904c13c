@@ -1,0 +1,5 @@
+package com.library.reservation;
+
+public enum ReservationStatus {
+    ACTIVE, COMPLETED, CANCELLED, EXPIRED
+}

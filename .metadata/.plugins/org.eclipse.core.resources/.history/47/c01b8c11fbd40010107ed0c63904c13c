@@ -1,0 +1,17 @@
+package com.library.reservation;
+
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class ReservationService {
+    private final ReservationRepository repo;
+
+    public ReservationService(ReservationRepository repo) { this.repo = repo; }
+
+    public Reservation create(Reservation r) { return repo.save(r); }
+    public List<Reservation> listAll() { return repo.findAll(); }
+    public Reservation get(Long id) { return repo.findById(id).orElseThrow(); }
+    public List<Reservation> findByStatus(ReservationStatus status) { return repo.findByStatus(status); }
+}

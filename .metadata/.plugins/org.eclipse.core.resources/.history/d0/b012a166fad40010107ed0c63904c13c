@@ -1,0 +1,26 @@
+package com.library.book;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/books")
+public class BookController {
+    private final BookService service;
+
+    public BookController(BookService service) { this.service = service; }
+
+    @GetMapping
+    public List<Book> all() { return service.listAll(); }
+
+    @PostMapping
+    public ResponseEntity<Book> create(@RequestBody Book book) { return ResponseEntity.ok(service.save(book)); }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Book> get(@PathVariable Long id) { return ResponseEntity.ok(service.findById(id)); }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) { service.delete(id); return ResponseEntity.ok().build(); }
+}

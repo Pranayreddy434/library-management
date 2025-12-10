@@ -1,0 +1,41 @@
+package com.library.book;
+
+import java.util.List;
+
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class BookService {
+
+    private final BookRepository repo;
+
+    // Used by /api/books (public list with pagination)
+    public Page<Book> list(String title, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("title"));
+        // Simple: just return all; you can later filter by title
+        return repo.findAll(pageable);
+    }
+
+    public Book get(Long id) {
+        return repo.findById(id).orElseThrow();
+    }
+
+    // Convenience create
+    public Book create(Book book) {
+        return repo.save(book);
+    }
+
+    // 👇 These two methods are what your AdminBookController is calling
+
+    public List<Book> listAll() {
+        return repo.findAll();
+    }
+
+    public Book save(Book book) {
+        return repo.save(book);
+    }
+}

@@ -1,0 +1,110 @@
+package com.library.reservation;
+
+import com.library.book.Book;
+import com.library.book.BookRepository;
+import com.library.user.User;
+import com.library.user.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ReservationService {
+
+    private final ReservationRepository reservationRepo;
+    private final BookRepository bookRepo;
+    private final UserRepository userRepo;
+    private final LibrarySettingsService settingsService; // if you have one; otherwise remove and hardcode
+
+    private User getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepo.findByEmail(email).orElseThrow();
+    }
+
+    public Reservation createReservation(Long bookId) {
+        User user = getCurrentUser();
+        Book book = bookRepo.findById(bookId).orElseThrow();
+
+        // simple logic: if availableCopies>0 -> BORROWED; else WAITING
+        Reservation reservation = new Reservation();
+        reservation.setUser(user);
+        reservation.setBook(book);
+        reservation.setCreatedAt(Instant.now());
+
+        if (book.getAvailableCopies() != null && book.getAvailableCopies() > 0) {
+            reservation.setStatus(ReservationStatus.BORROWED);
+            reservation.setIssueDate(LocalDate.now());
+            int maxDays = settingsService != null
+                    ? settingsService.getSettings().getMaxBorrowDays()
+                    : 14;
+            reservation.setDueDate(LocalDate.now().plusDays(maxDays));
+            book.setAvailableCopies(book.getAvailableCopies() - 1);
+            bookRepo.save(book);
+        } else {
+            reservation.setStatus(ReservationStatus.WAITING);
+        }
+
+        reservation.setFineAmount(BigDecimal.ZERO);
+        return reservationRepo.save(reservation);
+    }
+
+    public List<Reservation> myReservations() {
+        User user = getCurrentUser();
+        return reservationRepo.findByUserOrderByCreatedAtDesc(user);
+    }
+
+    public List<ReservationDto> myReservationsDto() {
+        return myReservations().stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    private ReservationDto toDto(Reservation r) {
+        ReservationDto dto = new ReservationDto();
+        dto.setId(r.getId());
+        dto.setStatus(r.getStatus().name());
+        dto.setIssueDate(r.getIssueDate());
+        dto.setDueDate(r.getDueDate());
+        dto.setReturnDate(r.getReturnDate());
+        dto.setFineAmount(r.getFineAmount());
+
+        if (r.getBook() != null) {
+            dto.setBookId(r.getBook().getId());
+            dto.setBookTitle(r.getBook().getTitle());
+            dto.setBookAuthor(r.getBook().getAuthor());
+        }
+
+        return dto;
+    }
+
+    public Reservation returnBook(Long id) {
+        Reservation r = reservationRepo.findById(id).orElseThrow();
+        if (r.getStatus() == ReservationStatus.BORROWED) {
+            r.setStatus(ReservationStatus.RETURNED);
+            r.setReturnDate(LocalDate.now());
+
+            // increase available copies
+            Book book = r.getBook();
+            if (book != null && book.getAvailableCopies() != null) {
+                book.setAvailableCopies(book.getAvailableCopies() + 1);
+                bookRepo.save(book);
+            }
+
+            // simple fine calculation (optional)
+            if (r.getDueDate() != null && r.getReturnDate().isAfter(r.getDueDate())) {
+                long daysLate = r.getReturnDate().toEpochDay() - r.getDueDate().toEpochDay();
+                BigDecimal finePerDay = settingsService != null
+                        ? settingsService.getSettings().getFinePerDay()
+                        : BigDecimal.valueOf(2);
+                r.setFineAmount(finePerDay.multiply(BigDecimal.valueOf(daysLate)));
+            }
+        }
+        return reservationRepo.save(r);
+    }
+}

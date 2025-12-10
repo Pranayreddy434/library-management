@@ -1,0 +1,15 @@
+package com.library.settings;
+
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class LibrarySettingsService {
+    private final LibrarySettingsRepository repo;
+
+    public LibrarySettingsService(LibrarySettingsRepository repo) { this.repo = repo; }
+
+    public LibrarySettings save(LibrarySettings s) { return repo.save(s); }
+    public List<LibrarySettings> all() { return repo.findAll(); }
+}

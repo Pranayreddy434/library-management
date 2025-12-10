@@ -1,0 +1,44 @@
+package com.library.admin;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.library.book.Book;
+import com.library.book.BookService;
+
+@RestController
+@RequestMapping("/api/admin/books")
+@CrossOrigin(origins = "*")
+public class AdminBookController {
+
+    private final BookService bookService;
+
+    public AdminBookController(BookService bookService) {
+        this.bookService = bookService;
+    }
+
+    @GetMapping
+    public List<Book> all() {
+        return bookService.listAll();
+    }
+
+    @PostMapping
+    public ResponseEntity<Book> create(@RequestBody Book b) {
+        return ResponseEntity.ok(bookService.save(b));
+    }
+    @GetMapping("/search-external")
+    @PreAuthorize("hasRole('ADMIN')")
+    public OpenLibraryService.OpenLibrarySearchResponse searchExternal(
+            @RequestParam String query) {
+        return openLibraryService.search(query);
+    }
+}
