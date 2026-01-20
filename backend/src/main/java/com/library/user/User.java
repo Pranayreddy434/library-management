@@ -5,6 +5,7 @@ import com.library.notification.Notification;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -31,4 +32,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<Notification> notifications;
+    
+    private String resetOtp;
+    private LocalDateTime otpExpiry;	
 }

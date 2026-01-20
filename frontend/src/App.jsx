@@ -10,8 +10,11 @@ import ImportBookPage from "./pages/ImportBookPage.jsx";
 import AdminReservationsPage from "./pages/AdminReservationsPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Layout from "./components/Layout.jsx";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
+import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 
 export default function App() {
+
   return (
     <Routes>
       {/* redirect root to /books */}
@@ -88,6 +91,10 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+
     </Routes>
+    
   );
 }

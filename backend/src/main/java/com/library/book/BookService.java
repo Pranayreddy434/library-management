@@ -12,12 +12,12 @@ public class BookService {
 
     private final BookRepository repo;
 
-    // For /api/books – user side
+   
     public List<Book> listAll() {
         return repo.findAll(Sort.by("title").ascending());
     }
 
-    // For future filtering if needed
+    
     public List<Book> listByTitle(String title) {
         if (title == null || title.isBlank()) {
             return listAll();
@@ -31,7 +31,6 @@ public class BookService {
         return repo.findById(id).orElseThrow();
     }
 
-    // Used by admin create/import
     public Book save(Book book) {
         return repo.save(book);
     }

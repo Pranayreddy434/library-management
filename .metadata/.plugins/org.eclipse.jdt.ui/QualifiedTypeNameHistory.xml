@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
-    <fullyQualifiedTypeName name="com.library.user.User"/>
     <fullyQualifiedTypeName name="java.util.List"/>
+    <fullyQualifiedTypeName name="com.library.user.User"/>
+    <fullyQualifiedTypeName name="java.util.Map"/>
 </qualifiedTypeNameHistroy>

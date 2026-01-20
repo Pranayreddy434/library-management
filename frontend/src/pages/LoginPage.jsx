@@ -7,17 +7,23 @@ import {
   Typography,
   Paper,
   Alert,
+  IconButton,
+  InputAdornment,
 } from "@mui/material";
 import { useNavigate, Link } from "react-router-dom";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import api from "../api/axiosClient.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -29,7 +35,7 @@ export default function LoginPage() {
       const res = await api.post("/auth/login", { email, password });
       login(res.data);
       navigate("/books");
-    } catch (err) {
+    } catch {
       setError("Invalid email or password. Please try again.");
     } finally {
       setLoading(false);
@@ -80,17 +86,12 @@ export default function LoginPage() {
             boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
             animation: "slideUp 0.5s ease-out",
             "@keyframes slideUp": {
-              from: {
-                opacity: 0,
-                transform: "translateY(20px)",
-              },
-              to: {
-                opacity: 1,
-                transform: "translateY(0)",
-              },
+              from: { opacity: 0, transform: "translateY(20px)" },
+              to: { opacity: 1, transform: "translateY(0)" },
             },
           }}
         >
+          {/* Header */}
           <Box
             sx={{
               display: "flex",
@@ -104,7 +105,7 @@ export default function LoginPage() {
                 width: 60,
                 height: 60,
                 borderRadius: "12px",
-               background: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)",
+                background: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -122,6 +123,7 @@ export default function LoginPage() {
             </Typography>
           </Box>
 
+          {/* Form */}
           <form onSubmit={handleSubmit}>
             {error && (
               <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
@@ -137,27 +139,46 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  transition: "all 0.2s ease",
-                },
-              }}
             />
 
+            {/* ✅ Password with Eye Icon */}
             <TextField
               fullWidth
               margin="normal"
               label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  transition: "all 0.2s ease",
-                },
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                      aria-label="toggle password visibility"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
               }}
             />
+
+            {/* Forgot password */}
+            <Box sx={{ textAlign: "right", mt: 1 }}>
+              <Link
+                to="/forgot-password"
+                style={{
+                  fontSize: "0.85rem",
+                  color: "#0891B2",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
+              >
+                Forgot password?
+              </Link>
+            </Box>
 
             <Button
               fullWidth
@@ -168,13 +189,15 @@ export default function LoginPage() {
                 mt: 3,
                 py: 1.2,
                 fontSize: "1rem",
-                background: "linear-gradient(135deg, #06b6a4 0%, #0ea5a4 100%)" ,
+                background:
+                  "linear-gradient(135deg, #06b6a4 0%, #0ea5a4 100%)",
               }}
             >
               {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
 
+          {/* Register */}
           <Box sx={{ mt: 3, textAlign: "center" }}>
             <Typography variant="body2" color="text.secondary">
               Don't have an account?{" "}
@@ -184,14 +207,7 @@ export default function LoginPage() {
                   color: "#2D5A3D",
                   fontWeight: 600,
                   textDecoration: "none",
-                  transition: "all 0.2s ease",
                 }}
-                onMouseEnter={(e) =>
-                  (e.target.style.color = "#E8B4A8")
-                }
-                onMouseLeave={(e) =>
-                  (e.target.style.color = "#2D5A3D")
-                }
               >
                 Register here
               </Link>
