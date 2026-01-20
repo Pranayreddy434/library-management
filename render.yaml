@@ -5,22 +5,25 @@ services:
     env: docker
     dockerContext: backend
     dockerfilePath: backend/Dockerfile
-    plan: free # or yours
+    plan: free
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: SPRING_DATASOURCE_URL
-        sync: false # User will provide this in Render UI
+        value: jdbc:mysql://library-db:3306/library_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - key: SPRING_DATASOURCE_USERNAME
-        sync: false
+        value: root
       - key: SPRING_DATASOURCE_PASSWORD
-        sync: false
+        fromService:
+          name: library-db
+          type: pserv
+          property: password
       - key: SPRING_MAIL_USERNAME
         sync: false
       - key: SPRING_MAIL_PASSWORD
         sync: false
       - key: JWT_SECRET
-        generateValue: true # Render can generate a random one
+        generateValue: true
       - key: JWT_EXPIRATION
         value: "86400000"
 
@@ -33,4 +36,17 @@ services:
     plan: free
     envVars:
       - key: VITE_API_URL
-        value: https://library-management-backend.onrender.com/api # Replace with your actual backend URL after deployment
+        value: https://library-management-backend.onrender.com/api
+
+  # Database Service (MySQL)
+  - type: pserv
+    name: library-db
+    env: docker
+    dockerContext: .
+    dockerfilePath: ./.render/mysql.Dockerfile # We'll create this to use stock mysql:8.0
+    plan: free
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+      - key: MYSQL_DATABASE
+        value: library_db

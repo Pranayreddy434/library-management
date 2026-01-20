@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/library_db?createDatabaseIfNotExist=true}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/library_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false}
     username: ${SPRING_DATASOURCE_USERNAME:root}
     password: ${SPRING_DATASOURCE_PASSWORD:20g21a0434_P}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -13,7 +13,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
 
   # ✅ MAIL CONFIG (REQUIRED FOR OTP EMAIL)
   mail:
