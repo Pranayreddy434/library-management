@@ -1,0 +1,36 @@
+services:
+  # Backend Service
+  - type: web
+    name: library-management-backend
+    env: docker
+    dockerContext: backend
+    dockerfilePath: backend/Dockerfile
+    plan: free # or yours
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        sync: false # User will provide this in Render UI
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: SPRING_MAIL_USERNAME
+        sync: false
+      - key: SPRING_MAIL_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true # Render can generate a random one
+      - key: JWT_EXPIRATION
+        value: "86400000"
+
+  # Frontend Service
+  - type: web
+    name: library-management-frontend
+    env: docker
+    dockerContext: frontend
+    dockerfilePath: frontend/Dockerfile
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        value: https://library-management-backend.onrender.com/api # Replace with your actual backend URL after deployment
