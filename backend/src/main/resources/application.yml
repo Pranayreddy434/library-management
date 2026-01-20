@@ -1,23 +1,26 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/library_db?createDatabaseIfNotExist=true
-    username: root
-    password: 20g21a0434_P
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/library_db?createDatabaseIfNotExist=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:20g21a0434_P}
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
 
   # ✅ MAIL CONFIG (REQUIRED FOR OTP EMAIL)
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: pranay0418@gmail.com
-    password: unau tazu iyax ufva
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:pranay0418@gmail.com}
+    password: ${SPRING_MAIL_PASSWORD:unau tazu iyax ufva}
     properties:
       mail:
         smtp:
@@ -27,8 +30,8 @@ spring:
 
 jwt:
   # 👉 MUST be at least 32 chars (256 bits) for HS256
-  secret: "this-is-a-very-long-secret-key-1234567890!!"
-  expiration-ms: 86400000
+  secret: ${JWT_SECRET:this-is-a-very-long-secret-key-1234567890!!}
+  expiration-ms: ${JWT_EXPIRATION:86400000}
 
 openlibrary:
   base-url: "https://openlibrary.org"
