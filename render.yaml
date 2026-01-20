@@ -10,12 +10,12 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: SPRING_DATASOURCE_URL
-        value: jdbc:mysql://library-db:3306/library_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+        value: jdbc:mysql://library-mysql:3306/library_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - key: SPRING_DATASOURCE_USERNAME
         value: root
       - key: SPRING_DATASOURCE_PASSWORD
         fromService:
-          name: library-db
+          name: library-mysql
           type: pserv
           property: password
       - key: SPRING_MAIL_USERNAME
@@ -40,10 +40,10 @@ services:
 
   # Database Service (MySQL)
   - type: pserv
-    name: library-db
+    name: library-mysql
     env: docker
     dockerContext: .
-    dockerfilePath: ./.render/mysql.Dockerfile # We'll create this to use stock mysql:8.0
+    dockerfilePath: ./.render/mysql.Dockerfile
     plan: free
     envVars:
       - key: MYSQL_ROOT_PASSWORD
