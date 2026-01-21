@@ -44,7 +44,6 @@ services:
     env: docker
     dockerContext: .
     dockerfilePath: ./.render/mysql.Dockerfile
-    plan: free
     envVars:
       - key: MYSQL_ROOT_PASSWORD
         generateValue: true
