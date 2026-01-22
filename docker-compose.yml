@@ -4,53 +4,19 @@ services:
   mysql:
     image: mysql:8.0
     container_name: library-mysql
-    restart: always
     environment:
       MYSQL_DATABASE: library_db
       MYSQL_ROOT_PASSWORD: 20g21a0434_P
     ports:
       - "3307:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: library-backend
-    restart: always
+    build: ./backend
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/library_db
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=20g21a0434_P
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/library_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 20g21a0434_P
     depends_on:
-      mysql:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: library-frontend
-    restart: always
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-
-volumes:
-  mysql_data:
+      - mysql

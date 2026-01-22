@@ -1,25 +1,42 @@
 spring:
+  application:
+    name: library-management-backend
+
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/library_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false}
-    username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:20g21a0434_P}
+    # 🔴 IMPORTANT:
+    # Do NOT default to localhost for cloud platforms
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      connection-timeout: 30000
+      validation-timeout: 5000
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-    defer-datasource-initialization: true
+    open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect
     properties:
       hibernate:
         format_sql: true
 
-  # ✅ MAIL CONFIG (REQUIRED FOR OTP EMAIL)
+  sql:
+    init:
+      mode: never
+
+  # ✅ MAIL CONFIG (OTP / EMAIL)
   mail:
     host: ${SPRING_MAIL_HOST:smtp.gmail.com}
     port: ${SPRING_MAIL_PORT:587}
-    username: ${SPRING_MAIL_USERNAME:pranay0418@gmail.com}
-    password: ${SPRING_MAIL_PASSWORD:unau tazu iyax ufva}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -27,13 +44,26 @@ spring:
           starttls:
             enable: true
 
+# ✅ JWT CONFIG
 jwt:
-  # 👉 MUST be at least 32 chars (256 bits) for HS256
-  secret: ${JWT_SECRET:this-is-a-very-long-secret-key-1234567890!!}
+  # MUST be >= 32 characters
+  secret: ${JWT_SECRET}
   expiration-ms: ${JWT_EXPIRATION:86400000}
 
+# ✅ External API
 openlibrary:
-  base-url: "https://openlibrary.org"
+  base-url: https://openlibrary.org
 
+# ✅ SERVER (Render injects PORT automatically)
 server:
   port: ${PORT:8080}
+
+# ✅ ACTUATOR (required for health checks)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
