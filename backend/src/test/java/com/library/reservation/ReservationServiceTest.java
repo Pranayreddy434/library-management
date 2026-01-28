@@ -32,7 +32,7 @@ import com.library.user.User;
 import com.library.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)   // 👈 avoid UnnecessaryStubbing errors
+@MockitoSettings(strictness = Strictness.LENIENT) // 👈 avoid UnnecessaryStubbing errors
 class ReservationServiceTest {
 
     @Mock
@@ -107,13 +107,13 @@ class ReservationServiceTest {
 
         assertThat(result.getStatus()).isEqualTo(ReservationStatus.BORROWED);
         assertThat(result.getBook().getId()).isEqualTo(1L);
-        verify(bookRepository).save(any(Book.class));           // availability updated
+        verify(bookRepository).save(any(Book.class)); // availability updated
         verify(reservationRepository).save(any(Reservation.class));
     }
 
     @Test
     void createReservation_WhenNoCopiesAvailable_ShouldAddToWaitingList() {
-        book.setAvailableCopies(0);  // simulate no copies
+        book.setAvailableCopies(0); // simulate no copies
 
         Reservation waiting = new Reservation();
         waiting.setId(101L);
@@ -127,5 +127,28 @@ class ReservationServiceTest {
 
         assertThat(result.getStatus()).isEqualTo(ReservationStatus.WAITING);
         verify(reservationRepository).save(any(Reservation.class));
+    }
+
+    @Test
+    void returnBook_WhenBorrowed_ShouldMarkReturnedAndIncreaseCopies() {
+        Reservation borrowed = new Reservation();
+        borrowed.setId(102L);
+        borrowed.setUser(currentUser);
+        borrowed.setBook(book);
+        borrowed.setStatus(ReservationStatus.BORROWED);
+        borrowed.setDueDate(LocalDate.now().plusDays(1));
+
+        book.setAvailableCopies(1); // was 2, one borrowed
+
+        when(reservationRepository.findById(102L)).thenReturn(Optional.of(borrowed));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Reservation result = reservationService.returnBook(102L);
+
+        assertThat(result.getStatus()).isEqualTo(ReservationStatus.RETURNED);
+        assertThat(result.getReturnDate()).isEqualTo(LocalDate.now());
+        assertThat(book.getAvailableCopies()).isEqualTo(2);
+        verify(bookRepository).save(book);
+        verify(reservationRepository).save(borrowed);
     }
 }

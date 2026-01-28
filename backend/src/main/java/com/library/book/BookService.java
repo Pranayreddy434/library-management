@@ -1,6 +1,7 @@
 package com.library.book;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -12,12 +13,11 @@ public class BookService {
 
     private final BookRepository repo;
 
-   
+    @Cacheable(value = "books")
     public List<Book> listAll() {
         return repo.findAll(Sort.by("title").ascending());
     }
 
-    
     public List<Book> listByTitle(String title) {
         if (title == null || title.isBlank()) {
             return listAll();

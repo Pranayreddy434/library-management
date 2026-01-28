@@ -10,18 +10,20 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: SPRING_DATASOURCE_URL
-        value: jdbc:mysql://library-mysql:3306/library_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+        sync: false
+        placeholder: "jdbc:mysql://YOUR_UPSTASH_HOST:PORT/db?ssl-mode=REQUIRED"
       - key: SPRING_DATASOURCE_USERNAME
-        value: root
+        sync: false
+        placeholder: "your_upstash_username"
       - key: SPRING_DATASOURCE_PASSWORD
-        fromService:
-          name: library-mysql
-          type: pserv
-          envVar: MYSQL_ROOT_PASSWORD
+        sync: false
       - key: SPRING_MAIL_USERNAME
         sync: false
       - key: SPRING_MAIL_PASSWORD
         sync: false
+      - key: SPRING_DATA_REDIS_URL
+        sync: false
+        placeholder: "redis://default:YOUR_PASSWORD@YOUR_HOST:PORT"
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRATION
@@ -37,15 +39,3 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://library-management-backend.onrender.com/api
-
-  # Database Service (MySQL)
-  - type: pserv
-    name: library-mysql
-    env: docker
-    dockerContext: .
-    dockerfilePath: ./.render/mysql.Dockerfile
-    envVars:
-      - key: MYSQL_ROOT_PASSWORD
-        generateValue: true
-      - key: MYSQL_DATABASE
-        value: library_db

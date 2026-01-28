@@ -11,6 +11,7 @@ import {
   Chip,
   Box,
   Card,
+  Button,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import api from "../api/axiosClient.js";
@@ -46,6 +47,17 @@ export default function ReservationsPage() {
       enqueueSnackbar("Failed to load reservations", { variant: "error" });
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const handleReturn = async (id) => {
+    try {
+      await api.put(`/reservations/${id}/return`);
+      enqueueSnackbar("Book returned successfully!", { variant: "success" });
+      load();
+    } catch (err) {
+      console.error(err);
+      enqueueSnackbar("Failed to return book", { variant: "error" });
     }
   };
 
@@ -157,6 +169,9 @@ export default function ReservationsPage() {
                   <TableCell sx={{ color: "#fff", fontWeight: 700 }}>
                     Fine (₹)
                   </TableCell>
+                  <TableCell sx={{ color: "#fff", fontWeight: 700 }}>
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -203,12 +218,33 @@ export default function ReservationsPage() {
                       <TableCell sx={{ fontWeight: 600, color: "#E8B4A8" }}>
                         ₹{r.fineAmount ?? 0}
                       </TableCell>
+                      <TableCell>
+                        {r.status === "BORROWED" && (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleReturn(r.id)}
+                            sx={{
+                              background: "linear-gradient(135deg, #044b54 0%, #0b6b9a 100%)",
+                              textTransform: "none",
+                              fontWeight: 600,
+                              borderRadius: 1.5,
+                              boxShadow: "none",
+                              "&:hover": {
+                                boxShadow: "0 4px 12px rgba(4, 75, 84, 0.2)",
+                              },
+                            }}
+                          >
+                            Return
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
                 {reservations.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
+                    <TableCell colSpan={7} align="center">
                       <Box sx={{ py: 4 }}>
                         <Typography
                           variant="h6"
