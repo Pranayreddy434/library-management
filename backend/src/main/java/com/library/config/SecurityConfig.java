@@ -36,8 +36,7 @@ public class SecurityConfig {
                         // admin-only endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // everything else needs auth
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .userDetailsService(userDetailsService)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -3,8 +3,8 @@ services:
   - type: web
     name: library-management-backend
     env: docker
-    dockerContext: .
-    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: SPRING_PROFILES_ACTIVE
