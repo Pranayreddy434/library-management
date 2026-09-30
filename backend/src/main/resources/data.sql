@@ -3,7 +3,7 @@
 -- ==========================================================
 INSERT INTO library_settings (id, max_borrow_days, reservation_limit_per_user, fine_per_day)
 VALUES (1, 14, 5, 2.00)
-ON DUPLICATE KEY UPDATE max_borrow_days = 14;
+ON CONFLICT (id) DO UPDATE SET max_borrow_days = 14;
 
 
 -- ==========================================================
@@ -16,7 +16,7 @@ VALUES
    '$2a$10$fJVYtz8HzX3z9bYQ6zR0ROoF9uXpzqkJ6Z3b49y3PhxfHS5YUOFWy', 'ADMIN'),
   (2, 'John Doe', 'john@example.com', 
    '$2a$10$RaC21KI6yCv6lb6qTntpfeESB.68lRoqA8g.QnDlqLkQ/eBFm2I2S', 'USER')
-ON DUPLICATE KEY UPDATE name = VALUES(name);
+ON CONFLICT (id) DO NOTHING;
 
 
 -- Password Notes:
@@ -108,7 +108,12 @@ VALUES
   (20, 'Sapiens: A Brief History of Humankind', 'Yuval Noah Harari', '9780062316097', 'History', 3, 3,
    'https://covers.openlibrary.org/b/isbn/9780062316097-M.jpg',
    'Explores the history and impact of Homo sapiens.', CURRENT_TIMESTAMP)
-ON DUPLICATE KEY UPDATE title = VALUES(title), author = VALUES(author);
+ON CONFLICT (id) DO NOTHING;
+
+-- Synchronize sequences for PostgreSQL
+SELECT setval(pg_get_serial_sequence('book', 'id'), COALESCE(MAX(id), 1)) FROM book;
+SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE(MAX(id), 1)) FROM users;
+SELECT setval(pg_get_serial_sequence('library_settings', 'id'), COALESCE(MAX(id), 1)) FROM library_settings;
 
 
 -- ==========================================================

@@ -11,7 +11,7 @@ services:
         value: prod
       - key: SPRING_DATASOURCE_URL
         sync: false
-        placeholder: "jdbc:mysql://YOUR_UPSTASH_HOST:PORT/db?ssl-mode=REQUIRED"
+        placeholder: "jdbc:postgresql://db.lcxwrtuzowmoqecufngi.supabase.co:5432/postgres?sslmode=require"
       - key: SPRING_DATASOURCE_USERNAME
         sync: false
         placeholder: "your_upstash_username"

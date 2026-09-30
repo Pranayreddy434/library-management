@@ -3,7 +3,7 @@
 https://github.com/user-attachments/assets/5d256b8f-3c59-4872-96ac-3dc0be4777f7
 
 📚 Library Booking System — Full-Stack Application
-🚀 React + Vite + Material UI | Spring Boot 3.3 | JWT Auth | MySQL | Open Library API
+🚀 React + Vite + Material UI | Spring Boot 3.3 | JWT Auth | Supabase (PostgreSQL) | Open Library API
 
 A full-stack web application that allows users to:
 
@@ -17,7 +17,7 @@ A full-stack web application that allows users to:
 Layer	Technologies
 Frontend	React, Vite, Material UI, Axios, JWT Auth
 Backend	Spring Boot 3.3, Spring Security, JPA/Hibernate
-DB	MySQL
+DB	Supabase (PostgreSQL)
 External API	Open Library API (Book search + auto import)
 Auth	JSON Web Tokens (JWT)
 Build Tools	Maven, Node.js
@@ -80,19 +80,14 @@ library-booking-system/
 └── README.md                    # You are here
 
 ⚙️ Backend Setup (Spring Boot)
-1️⃣ Database Setup (MySQL)
-
-Create a database:
-
-CREATE DATABASE library_db;
-
-2️⃣ Update DB credentials
+1️⃣ Database Setup (Supabase PostgreSQL)
 
 File: backend/src/main/resources/application.properties
 
-spring.datasource.url=jdbc:mysql://localhost:3306/library_db
-spring.datasource.username=root
-spring.datasource.password=your_mysql_password
+spring.datasource.url=jdbc:postgresql://<SUPABASE_HOST>:5432/postgres?sslmode=require
+spring.datasource.username=<USERNAME>
+spring.datasource.password=<PASSWORD>
+spring.datasource.driver-class-name=org.postgresql.Driver
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
