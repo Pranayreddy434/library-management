@@ -14,28 +14,33 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 
 export default function App() {
-
   return (
     <Routes>
-      {/* redirect root to /books */}
-      <Route path="/" element={<Navigate to="/books" />} />
-
-      {/* public routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-
-      {/* protected user routes */}
+      {/* Books page is the public homepage */}
+      <Route
+        path="/"
+        element={
+          <Layout>
+            <BooksPage />
+          </Layout>
+        }
+      />
       <Route
         path="/books"
         element={
-          <ProtectedRoute>
-            <Layout>
-              <BooksPage />
-            </Layout>
-          </ProtectedRoute>
+          <Layout>
+            <BooksPage />
+          </Layout>
         }
       />
 
+      {/* Public auth routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+      {/* Protected user routes */}
       <Route
         path="/reservations"
         element={
@@ -47,7 +52,7 @@ export default function App() {
         }
       />
 
-      {/* protected admin routes */}
+      {/* Protected admin routes */}
       <Route
         path="/admin"
         element={
@@ -91,10 +96,9 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
+      {/* Catch-all redirect to homepage */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-    
   );
 }

@@ -16,15 +16,19 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
+import LoginIcon from "@mui/icons-material/Login";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axiosClient.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function BooksPage() {
   const [books, setBooks] = useState([]);
   const [search, setSearch] = useState("");
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const load = async () => {
     try {
@@ -37,6 +41,11 @@ export default function BooksPage() {
   };
 
   const reserve = async (id) => {
+    if (!user) {
+      enqueueSnackbar("Please log in to reserve or borrow books", { variant: "info" });
+      navigate("/login", { state: { from: "/books" } });
+      return;
+    }
     try {
       await api.post("/reservations", null, { params: { bookId: id } });
       enqueueSnackbar("Book reserved / added to waiting list", {
@@ -67,6 +76,68 @@ export default function BooksPage() {
   return (
     <Box sx={{ backgroundColor: "#FAFBFC", minHeight: "100vh", py: 4 }}>
       <Container maxWidth="lg">
+        {/* Guest Banner if not logged in */}
+        {!user && (
+          <Box
+            sx={{
+              mb: 4,
+              p: 3,
+              borderRadius: 3,
+              background: "linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(8, 145, 178, 0.08) 100%)",
+              border: "1px solid rgba(6, 182, 212, 0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 2,
+              boxShadow: "0 4px 20px rgba(6, 182, 212, 0.08)",
+            }}
+          >
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: "#0F172A", mb: 0.5, display: "flex", alignItems: "center", gap: 1 }}>
+                📖 Welcome to Library Pro!
+              </Typography>
+              <Typography variant="body2" sx={{ color: "#475569" }}>
+                Browse our complete book catalog. Whenever you want to reserve a book or borrow a copy, simply log in to your account.
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", gap: 1.5 }}>
+              <Button
+                variant="outlined"
+                startIcon={<LoginIcon />}
+                onClick={() => navigate("/login", { state: { from: "/books" } })}
+                sx={{
+                  borderColor: "#06B6D4",
+                  color: "#0891B2",
+                  fontWeight: 700,
+                  textTransform: "none",
+                  borderRadius: 2,
+                  "&:hover": {
+                    borderColor: "#0891B2",
+                    backgroundColor: "rgba(6, 182, 212, 0.1)",
+                  },
+                }}
+              >
+                Login
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<PersonAddIcon />}
+                onClick={() => navigate("/register")}
+                sx={{
+                  background: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)",
+                  fontWeight: 700,
+                  textTransform: "none",
+                  borderRadius: 2,
+                  boxShadow: "0 4px 14px rgba(6, 182, 212, 0.3)",
+                }}
+              >
+                Register
+              </Button>
+            </Box>
+          </Box>
+        )}
+
         <Box
           sx={{
             display: "flex",
@@ -261,21 +332,21 @@ export default function BooksPage() {
                     fullWidth
                     size="small"
                     variant="contained"
-                    disabled={b.availableCopies === 0}
                     onClick={() => reserve(b.id)}
                     sx={{
                       background:
                         b.availableCopies > 0
                           ? "linear-gradient(135deg, #06b6a4 0%, #0ea5a4 100%)"
-                          : "#ccc",
-                          
+                          : "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
                       fontWeight: 600,
                       transition: "all 0.3s ease",
+                      textTransform: "none",
+                      fontSize: "0.9rem",
                     }}
                   >
-                    {b.availableCopies > 0
-                      ? "Reserve Book"
-                      : "Join Waiting List"}
+                    {!user
+                      ? (b.availableCopies > 0 ? "Login to Reserve" : "Login for Waitlist")
+                      : (b.availableCopies > 0 ? "Reserve Book" : "Join Waiting List")}
                   </Button>
                 </CardActions>
               </Card>

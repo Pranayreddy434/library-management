@@ -10,7 +10,7 @@ import {
   IconButton,
   InputAdornment,
 } from "@mui/material";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
@@ -26,6 +26,8 @@ export default function LoginPage() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/books";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +36,7 @@ export default function LoginPage() {
     try {
       const res = await api.post("/auth/login", { email, password });
       login(res.data);
-      navigate("/books");
+      navigate(from, { replace: true });
     } catch {
       setError("Invalid email or password. Please try again.");
     } finally {
@@ -197,14 +199,14 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* Register */}
+          {/* Register & Guest link */}
           <Box sx={{ mt: 3, textAlign: "center" }}>
             <Typography variant="body2" color="text.secondary">
               Don't have an account?{" "}
               <Link
                 to="/register"
                 style={{
-                  color: "#2D5A3D",
+                  color: "#0891B2",
                   fontWeight: 600,
                   textDecoration: "none",
                 }}
@@ -212,6 +214,19 @@ export default function LoginPage() {
                 Register here
               </Link>
             </Typography>
+            <Box sx={{ mt: 2 }}>
+              <Link
+                to="/books"
+                style={{
+                  color: "#64748B",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  textDecoration: "none",
+                }}
+              >
+                ← Browse books as guest
+              </Link>
+            </Box>
           </Box>
         </Paper>
       </Container>

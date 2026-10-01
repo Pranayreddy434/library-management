@@ -11,13 +11,15 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  Badge,
+  Chip,
+  Avatar,
 } from "@mui/material";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import LogoutIcon from "@mui/icons-material/Logout";
-import HomeIcon from "@mui/icons-material/Home";
+import LoginIcon from "@mui/icons-material/Login";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import CollectionsBookmarkIcon from "@mui/icons-material/CollectionsBookmark";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
@@ -33,15 +35,23 @@ export default function Layout({ children }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isActive = (path) => location.pathname.startsWith(path);
+  const isActive = (path) => {
+    if (path === "/books") {
+      return location.pathname === "/" || location.pathname === "/books";
+    }
+    return location.pathname.startsWith(path);
+  };
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/books");
   };
 
-  const navButtons = [
+  const publicButtons = [
     { label: "Books", path: "/books", icon: <CollectionsBookmarkIcon /> },
+  ];
+
+  const userButtons = [
     { label: "My Reservations", path: "/reservations", icon: <BookmarkIcon /> },
   ];
 
@@ -52,7 +62,11 @@ export default function Layout({ children }) {
     { label: "Import Book", path: "/admin/import-book", icon: <FileDownloadIcon /> },
   ];
 
-  const allButtons = [...navButtons, ...(user?.role === "ADMIN" ? adminButtons : [])];
+  const allNavButtons = [
+    ...publicButtons,
+    ...(user ? userButtons : []),
+    ...(user?.role === "ADMIN" ? adminButtons : []),
+  ];
 
   const drawerContent = (
     <Box
@@ -61,6 +75,8 @@ export default function Layout({ children }) {
         height: "100%",
         display: "flex",
         flexDirection: "column",
+        background: "#0F172A",
+        color: "#F8FAFC",
       }}
     >
       <Box
@@ -98,8 +114,31 @@ export default function Layout({ children }) {
         </IconButton>
       </Box>
 
+      {user && (
+        <Box sx={{ p: 2, borderBottom: "1px solid rgba(255, 255, 255, 0.1)" }}>
+          <Typography variant="body2" sx={{ color: "#94A3B8" }}>
+            Signed in as
+          </Typography>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#fff" }}>
+            {user.name || user.email}
+          </Typography>
+          <Chip
+            label={user.role}
+            size="small"
+            sx={{
+              mt: 0.5,
+              height: 20,
+              fontSize: "0.7rem",
+              fontWeight: 700,
+              backgroundColor: user.role === "ADMIN" ? "#06B6D4" : "#10B981",
+              color: "#fff",
+            }}
+          />
+        </Box>
+      )}
+
       <List sx={{ flex: 1, py: 2 }}>
-        {allButtons.map((btn, idx) => (
+        {allNavButtons.map((btn) => (
           <ListItemButton
             key={btn.path}
             onClick={() => {
@@ -145,25 +184,67 @@ export default function Layout({ children }) {
       <Divider sx={{ borderColor: "rgba(6, 182, 212, 0.2)" }} />
 
       <Box sx={{ p: 2 }}>
-        <Button
-          fullWidth
-          variant="contained"
-          endIcon={<LogoutIcon />}
-          onClick={handleLogout}
-          sx={{
-            background: "linear-gradient(135deg, #EF4444 0%, #DC2626 100%)",
-            fontWeight: 700,
-            textTransform: "none",
-            fontSize: "0.95rem",
-            transition: "all 0.3s ease",
-            "&:hover": {
-              boxShadow: "0 15px 35px rgba(239, 68, 68, 0.3)",
-              transform: "translateY(-2px)",
-            },
-          }}
-        >
-          Logout
-        </Button>
+        {user ? (
+          <Button
+            fullWidth
+            variant="contained"
+            endIcon={<LogoutIcon />}
+            onClick={handleLogout}
+            sx={{
+              background: "linear-gradient(135deg, #EF4444 0%, #DC2626 100%)",
+              fontWeight: 700,
+              textTransform: "none",
+              fontSize: "0.95rem",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: "0 15px 35px rgba(239, 68, 68, 0.3)",
+                transform: "translateY(-2px)",
+              },
+            }}
+          >
+            Logout
+          </Button>
+        ) : (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<LoginIcon />}
+              onClick={() => {
+                navigate("/login");
+                setMobileOpen(false);
+              }}
+              sx={{
+                borderColor: "#06B6D4",
+                color: "#06B6D4",
+                fontWeight: 700,
+                textTransform: "none",
+                "&:hover": {
+                  borderColor: "#0891B2",
+                  backgroundColor: "rgba(6, 182, 212, 0.1)",
+                },
+              }}
+            >
+              Login
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              startIcon={<PersonAddIcon />}
+              onClick={() => {
+                navigate("/register");
+                setMobileOpen(false);
+              }}
+              sx={{
+                background: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)",
+                fontWeight: 700,
+                textTransform: "none",
+              }}
+            >
+              Register
+            </Button>
+          </Box>
+        )}
       </Box>
     </Box>
   );
@@ -171,11 +252,11 @@ export default function Layout({ children }) {
   return (
     <>
       {/* Top Navigation Bar */}
-      <AppBar position="fixed" elevation={0} sx={{ zIndex: 1100, top: 0 }}>
+      <AppBar position="fixed" elevation={0} sx={{ zIndex: 1100, top: 0, backgroundColor: "#0F172A", borderBottom: "1px solid rgba(255, 255, 255, 0.1)" }}>
         <Toolbar
           sx={{
             py: 1.5,
-            px: { xs: 1, sm: 2, md: 3 },
+            px: { xs: 1.5, sm: 2, md: 3 },
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -225,129 +306,149 @@ export default function Layout({ children }) {
           </Box>
 
           {/* Desktop Navigation */}
-          {user && (
-            <Box
-              sx={{
-                display: { xs: "none", md: "flex" },
-                gap: 0.5,
-                alignItems: "center",
-                flex: 1,
-                ml: 4,
-              }}
-            >
-              {navButtons.map((btn) => (
-                <Button
-                  key={btn.path}
-                  onClick={() => navigate(btn.path)}
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+              gap: 0.5,
+              alignItems: "center",
+              flex: 1,
+              ml: 4,
+            }}
+          >
+            {allNavButtons.map((btn) => (
+              <Button
+                key={btn.path}
+                onClick={() => navigate(btn.path)}
+                sx={{
+                  color: isActive(btn.path) ? "#06B6D4" : "#94A3B8",
+                  fontWeight: isActive(btn.path) ? 700 : 600,
+                  position: "relative",
+                  fontSize: "0.95rem",
+                  transition: "all 0.3s ease",
+                  px: 2,
+                  py: 1,
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    bottom: 4,
+                    left: 0,
+                    right: 0,
+                    height: "3px",
+                    background: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)",
+                    borderRadius: "2px 2px 0 0",
+                    transform: isActive(btn.path) ? "scaleX(1)" : "scaleX(0)",
+                    transformOrigin: "center",
+                    transition: "transform 0.3s ease",
+                  },
+                  "&:hover": {
+                    color: "#06B6D4",
+                    backgroundColor: "rgba(6, 182, 212, 0.1)",
+                    borderRadius: 1,
+                  },
+                }}
+              >
+                {btn.label}
+              </Button>
+            ))}
+          </Box>
+
+          {/* Right-side Auth actions */}
+          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1.5 }}>
+            {user ? (
+              <>
+                <Chip
+                  avatar={<Avatar sx={{ bgcolor: "#06B6D4", color: "#fff", fontWeight: 700 }}>{(user.name || user.email || "U").charAt(0).toUpperCase()}</Avatar>}
+                  label={user.name || user.email}
+                  variant="outlined"
                   sx={{
-                    color: isActive(btn.path) ? "#06B6D4" : "#94A3B8",
-                    fontWeight: isActive(btn.path) ? 700 : 600,
-                    position: "relative",
+                    color: "#F8FAFC",
+                    borderColor: "rgba(6, 182, 212, 0.3)",
+                    fontWeight: 600,
+                    fontSize: "0.85rem",
+                  }}
+                />
+                <Button
+                  onClick={handleLogout}
+                  endIcon={<LogoutIcon />}
+                  sx={{
+                    color: "#94A3B8",
                     fontSize: "0.95rem",
                     transition: "all 0.3s ease",
                     px: 2,
                     py: 1,
-                    "&::after": {
-                      content: '""',
-                      position: "absolute",
-                      bottom: 4,
-                      left: 0,
-                      right: 0,
-                      height: "3px",
-                      background: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)",
-                      borderRadius: "2px 2px 0 0",
-                      transform: isActive(btn.path) ? "scaleX(1)" : "scaleX(0)",
-                      transformOrigin: "center",
-                      transition: "transform 0.3s ease",
-                    },
+                    textTransform: "none",
+                    fontWeight: 600,
                     "&:hover": {
-                      color: "#06B6D4",
-                      backgroundColor: "rgba(6, 182, 212, 0.1)",
+                      color: "#EF4444",
+                      backgroundColor: "rgba(239, 68, 68, 0.1)",
                       borderRadius: 1,
                     },
                   }}
                 >
-                  {btn.label}
+                  Logout
                 </Button>
-              ))}
-
-              {user.role === "ADMIN" && (
-                <>
-                  <Divider
-                    orientation="vertical"
-                    sx={{
-                      borderColor: "rgba(6, 182, 212, 0.2)",
-                      height: 24,
-                      mx: 1,
-                    }}
-                  />
-                  {adminButtons.map((btn) => (
-                    <Button
-                      key={btn.path}
-                      onClick={() => navigate(btn.path)}
-                      sx={{
-                        color: isActive(btn.path) ? "#06B6D4" : "#94A3B8",
-                        fontWeight: isActive(btn.path) ? 700 : 600,
-                        fontSize: "0.9rem",
-                        transition: "all 0.3s ease",
-                        px: 1.5,
-                        py: 1,
-                        "&:hover": {
-                          color: "#06B6D4",
-                          backgroundColor: "rgba(6, 182, 212, 0.1)",
-                          borderRadius: 1,
-                        },
-                      }}
-                    >
-                      {btn.label}
-                    </Button>
-                  ))}
-                </>
-              )}
-            </Box>
-          )}
-
-          {/* Desktop Logout */}
-          {user && (
-            <Button
-              onClick={handleLogout}
-              endIcon={<LogoutIcon />}
-              sx={{
-                display: { xs: "none", md: "flex" },
-                color: "#94A3B8",
-                fontSize: "0.95rem",
-                transition: "all 0.3s ease",
-                px: 2,
-                py: 1,
-                "&:hover": {
-                  color: "#06B6D4",
-                  backgroundColor: "rgba(6, 182, 212, 0.1)",
-                  borderRadius: 1,
-                },
-              }}
-            >
-              Logout
-            </Button>
-          )}
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={() => navigate("/login")}
+                  startIcon={<LoginIcon />}
+                  sx={{
+                    color: "#F8FAFC",
+                    fontWeight: 600,
+                    fontSize: "0.95rem",
+                    textTransform: "none",
+                    px: 2,
+                    py: 0.8,
+                    borderRadius: 2,
+                    "&:hover": {
+                      color: "#06B6D4",
+                      backgroundColor: "rgba(6, 182, 212, 0.1)",
+                    },
+                  }}
+                >
+                  Login
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => navigate("/register")}
+                  startIcon={<PersonAddIcon />}
+                  sx={{
+                    background: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)",
+                    fontWeight: 700,
+                    fontSize: "0.95rem",
+                    textTransform: "none",
+                    px: 2.5,
+                    py: 0.8,
+                    borderRadius: 2,
+                    boxShadow: "0 4px 14px rgba(6, 182, 212, 0.3)",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #0891B2 0%, #0E7490 100%)",
+                    },
+                  }}
+                >
+                  Register
+                </Button>
+              </>
+            )}
+          </Box>
 
           {/* Mobile Menu Button */}
-          {user && (
-            <IconButton
-              edge="end"
-              color="inherit"
-              onClick={() => setMobileOpen(true)}
-              sx={{
-                display: { xs: "flex", md: "none" },
-                color: "#06B6D4",
-                fontSize: 28,
-                "&:hover": {
-                  backgroundColor: "rgba(6, 182, 212, 0.1)",
-                },
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
+          <IconButton
+            edge="end"
+            color="inherit"
+            onClick={() => setMobileOpen(true)}
+            sx={{
+              display: { xs: "flex", md: "none" },
+              color: "#06B6D4",
+              fontSize: 28,
+              "&:hover": {
+                backgroundColor: "rgba(6, 182, 212, 0.1)",
+              },
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
 
@@ -359,6 +460,7 @@ export default function Layout({ children }) {
         sx={{
           "& .MuiDrawer-paper": {
             width: 280,
+            background: "#0F172A",
           },
         }}
       >
