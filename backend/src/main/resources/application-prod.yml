@@ -4,7 +4,7 @@ spring:
       on-profile: prod
 
   cache:
-    type: redis
+    type: ${SPRING_CACHE_TYPE:none}
 
   datasource:
     url: ${SPRING_DATASOURCE_URL}
@@ -13,9 +13,10 @@ spring:
     driver-class-name: org.postgresql.Driver
 
     hikari:
-      maximum-pool-size: 5
+      maximum-pool-size: 3
       minimum-idle: 1
       idle-timeout: 30000
+      max-lifetime: 60000
       connection-timeout: 20000
       validation-timeout: 5000
 
@@ -33,18 +34,16 @@ spring:
 
   data:
     redis:
-      url: ${SPRING_DATA_REDIS_URL}
+      url: ${SPRING_DATA_REDIS_URL:redis://localhost:6379}
       repositories:
         enabled: false
+
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
 
 jwt:
   secret: ${JWT_SECRET}
   expiration-ms: ${JWT_EXPIRATION:86400000}
-
-# ✅ MAIL CONFIG
-spring:
-  mail:
-    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
-    port: ${SPRING_MAIL_PORT:587}
-    username: ${SPRING_MAIL_USERNAME}
-    password: ${SPRING_MAIL_PASSWORD}
