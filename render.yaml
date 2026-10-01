@@ -46,4 +46,4 @@ services:
     plan: free
     envVars:
       - key: VITE_API_URL
-        value: https://library-management-backend.onrender.com/api
+        value: https://library-management-6-fm67.onrender.com/api
