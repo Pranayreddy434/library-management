@@ -1,5 +1,6 @@
 services:
   backend:
+    image: pranay0418/library-management-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -20,6 +21,7 @@ services:
       start_period: 90s
 
   frontend:
+    image: pranay0418/library-management-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
