@@ -31,6 +31,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // public auth endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        // actuator endpoints (health checks)
+                        .requestMatchers("/actuator/**").permitAll()
                         // public GET books
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
                         // admin-only endpoints
